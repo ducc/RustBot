@@ -58,7 +58,7 @@ fn on_message(discord: &Discord, state: &State, handler: &Handler, msg: Message)
 
     let (server, channel) = match state.find_channel(msg.channel_id) {
         Some(ChannelRef::Public(server, channel)) => (server, channel),
-        None | _ => {
+        _ => {
             println!("channel not found");
             return;
         }
@@ -66,12 +66,10 @@ fn on_message(discord: &Discord, state: &State, handler: &Handler, msg: Message)
 
     println!("[{} #{}] {}: {}", server.name, channel.name, msg.author.name, msg.content);
 
-    let content = &msg.content[COMMAND_PREFIX.len()..];
-    let split: Vec<&str> = content.split(' ').collect();
-    let (_, args) = split.as_slice().split_at(1);
-    let name = split[0].to_lowercase();
+    let mut args: Vec<&str> = (&msg.content[COMMAND_PREFIX.len()..]).split_whitespace().collect::<Vec<&str>>();
+    let name = shift(&mut args).unwrap();
 
-    if let Some(cmd) = handler.commands.get(&name) {
+    if let Some(cmd) = handler.commands.get(name) {
         let member = server.members.iter()
             .find(|m| m.user.id == msg.author.id)
             .expect("could not find member");
@@ -83,17 +81,25 @@ fn on_message(discord: &Discord, state: &State, handler: &Handler, msg: Message)
             channel: channel,
             member: member,
             message: &msg,
-            args: args
+            args: &args
         };
 
         cmd(ctx);
     }
 }
 
-pub fn help(ctx: Context) {
+fn shift<T>(vec: &mut Vec<T>) -> Option<T> {
+    if !vec.is_empty() {
+        Some(vec.remove(0))
+    } else {
+        None
+    }
+}
+
+fn help(ctx: Context) {
     let _ = ctx.reply("help me lol");
 }
 
-pub fn test(ctx: Context) {
+fn test(ctx: Context) {
     let _ = ctx.reply(format!("ur args: {:?}", ctx.args).as_ref());
 }

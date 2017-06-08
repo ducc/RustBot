@@ -30,7 +30,7 @@ pub struct Context<'a> {
     pub channel: &'a PublicChannel,
     pub member: &'a Member,
     pub message: &'a Message,
-    pub args: &'a [&'a str]
+    pub args: &'a Vec<&'a str>
 }
 
 impl<'a> Context<'a> {
